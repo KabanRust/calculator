@@ -51,23 +51,32 @@ class EngineeringCalculator(SimpleCalculator, QWidget):
             result = sp.integrate(expr, (self.x, a, b))
         else:
             result = sp.integrate(expr, self.x)
-        try:
-            return float(result.evalf())
-        except TypeError:
-            return str(result)
+        return result
 
     def differentiate(self, expression):
         expr = sp.sympify(expression)
         result = sp.diff(expr, self.x)
-        try:
-            return float(result.evalf())
-        except TypeError:
-            return str(result)
+        return result
 
     def evaluate(self, expression):
-        expr = sp.sympify(expression)
-        result = expr.evalf()
         try:
-            return float(result)
-        except TypeError:
-            return str(result)
+            if '∫' in expression:
+                # Обработка интегралов
+                parts = expression.split('∫')
+                if '|' in parts[1]:
+                    expr, bounds = parts[1].split('|')
+                    a, b = map(float, bounds.split(','))
+                    result = self.integrate(expr, a, b)
+                else:
+                    expr = parts[1]
+                    result = self.integrate(expr)
+            elif 'd/dx' in expression:
+                # Обработка производных
+                parts = expression.split('d/dx')
+                expr = parts[1]
+                result = self.differentiate(expr)
+            else:
+                result = sp.sympify(expression).evalf()
+            return float(result.evalf())
+        except Exception as e:
+            return f"Ошибка: {e}"
