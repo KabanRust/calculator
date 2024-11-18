@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget
 import matplotlib.pyplot as plt
 import numpy as np
 from constants import GRAPHING_FUNCTIONS

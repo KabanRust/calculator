@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget
 import sympy as sp
 import math
 from constants import ENGINEERING_OPERATORS, ENGINEERING_FUNCTIONS, PI, E

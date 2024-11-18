@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget
 from sympy import sympify
 from constants import FINANCIAL_FUNCTIONS
 
