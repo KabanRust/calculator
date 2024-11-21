@@ -45,12 +45,9 @@ class EngineeringCalculator(SimpleCalculator, QWidget):
     def factorial(self, a):
         return math.factorial(int(a))
 
-    def integrate(self, expression, a=None, b=None):
+    def integrate(self, expression):
         expr = sp.sympify(expression)
-        if a is not None and b is not None:
-            result = sp.integrate(expr, (self.x, a, b))
-        else:
-            result = sp.integrate(expr, self.x)
+        result = sp.integrate(expr, self.x)
         return result
 
     def differentiate(self, expression):
@@ -60,23 +57,21 @@ class EngineeringCalculator(SimpleCalculator, QWidget):
 
     def evaluate(self, expression):
         try:
-            if '∫' in expression:
-                # Обработка интегралов
-                parts = expression.split('∫')
-                if '|' in parts[1]:
-                    expr, bounds = parts[1].split('|')
-                    a, b = map(float, bounds.split(','))
-                    result = self.integrate(expr, a, b)
-                else:
-                    expr = parts[1]
-                    result = self.integrate(expr)
-            elif 'd/dx' in expression:
-                # Обработка производных
-                parts = expression.split('d/dx')
-                expr = parts[1]
+           # Обработка интегралов и производных
+            if expression.startswith('∫') and expression.endswith(')'):
+                expr = expression[2:-1]  # Убираем символы '∫(' и ')'
+                result = self.integrate(expr)
+            elif expression.startswith('d/dx') and expression.endswith(')'):
+                expr = expression[5:-1]  # Убираем символы 'd/dx(' и ')'
                 result = self.differentiate(expr)
             else:
                 result = sp.sympify(expression).evalf()
-            return float(result.evalf())
+
+            # Проверка на производную интеграла или интеграл производной
+            if 'Subs(Derivative(' in str(result) or 'Derivative(Integral(' in str(result):
+                # Вернуть исходное выражение без интеграла или производной
+                return expression.replace('∫(', '').replace('d/dx(', '').replace(')', '')
+
+            return result
         except Exception as e:
             return f"Ошибка: {e}"

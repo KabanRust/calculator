@@ -1,10 +1,6 @@
-from PySide6.QtWidgets import QWidget
 import numpy as np
 
-class MatrixCalculator(QWidget):
-    def __init__(self):
-        super().__init__()
-    
+class MatrixCalculator:
     def add(self, matrix1, matrix2):
         try:
             result = np.add(matrix1, matrix2)

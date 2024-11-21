@@ -1,6 +1,7 @@
-from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit
+from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QGridLayout, QLabel, QSpinBox
 from PySide6.QtCore import Qt
 from sympy import sympify
+import sympy as sp
 from constants import SIMPLE_OPERATORS, SIMPLE_FUNCTIONS, ENGINEERING_OPERATORS, ENGINEERING_FUNCTIONS, MATRIX_OPERATIONS, FINANCIAL_FUNCTIONS, ACCOUNTING_FUNCTIONS, GRAPHING_FUNCTIONS, CURRENCY_SYMBOLS, PROGRAMMABLE_FUNCTIONS
 import modules
 
@@ -51,8 +52,18 @@ class MainWindow(QMainWindow):
         tab = QWidget()
         layout = QVBoxLayout()
 
-        input_line = QLineEdit()
-        layout.addWidget(input_line)
+        self.input_line = QLineEdit()
+        layout.addWidget(self.input_line)
+
+        # Изначально скрываем строки для пределов интегралов
+        self.lower_bound = QLineEdit()
+        self.lower_bound.setPlaceholderText("Нижний предел")
+        self.upper_bound = QLineEdit()
+        self.upper_bound.setPlaceholderText("Верхний предел")
+        self.lower_bound.hide()
+        self.upper_bound.hide()
+        layout.addWidget(self.lower_bound)
+        layout.addWidget(self.upper_bound)
 
         button_layout = QVBoxLayout()
         base_buttons = [
@@ -65,14 +76,14 @@ class MainWindow(QMainWindow):
         ]
 
         if include_extra_buttons:
-            extra_buttons = ('x', 'y', 'z', 'a', 'b', '|')
+            extra_buttons = ('x', 'y', 'z', 'a', 'b')
             base_buttons[4] += extra_buttons
 
         for row in base_buttons:
             row_layout = QHBoxLayout()
             for button_text in row:
                 button = QPushButton(button_text)
-                button.clicked.connect(self.make_button_callback(button_text, input_line))
+                button.clicked.connect(self.make_button_callback(button_text, self.input_line))
                 row_layout.addWidget(button)
             button_layout.addLayout(row_layout)
 
@@ -88,8 +99,76 @@ class MainWindow(QMainWindow):
         return self.create_calculator_tab(ENGINEERING_OPERATORS, ENGINEERING_FUNCTIONS, include_extra_buttons=True)
 
     def create_matrix_calculator_tab(self):
-        return self.create_calculator_tab(MATRIX_OPERATIONS, [], include_extra_buttons=True)
+        tab = QWidget()
+        layout = QVBoxLayout()
 
+        # Ввод количества строк, столбцов и матриц
+        self.rows_spinbox = QSpinBox()
+        self.rows_spinbox.setRange(1, 5)
+        self.cols_spinbox = QSpinBox()
+        self.cols_spinbox.setRange(1, 5)
+        self.matrices_count_spinbox = QSpinBox()
+        self.matrices_count_spinbox.setRange(1, 2)
+
+        size_layout = QHBoxLayout()
+        size_layout.addWidget(QLabel('Rows:'))
+        size_layout.addWidget(self.rows_spinbox)
+        size_layout.addWidget(QLabel('Cols:'))
+        size_layout.addWidget(self.cols_spinbox)
+        size_layout.addWidget(QLabel('Matrices:'))
+        size_layout.addWidget(self.matrices_count_spinbox)
+
+        self.set_size_button = QPushButton('Set Size')
+        self.set_size_button.clicked.connect(self.set_matrix_size)
+        size_layout.addWidget(self.set_size_button)
+        layout.addLayout(size_layout)
+
+        # Макеты для матриц
+        self.matrix_layouts = [QGridLayout() for _ in range(2)]
+        for matrix_layout in self.matrix_layouts:
+            layout.addLayout(matrix_layout)
+
+        # Макет для результата
+        self.result_layout = QGridLayout()
+        layout.addLayout(self.result_layout)
+
+        # Результат
+        self.result_display = QLineEdit()
+        layout.addWidget(self.result_display)
+
+        # Кнопки операций
+        buttons_layout = QHBoxLayout()
+
+        self.add_button = QPushButton('Add')
+        self.add_button.clicked.connect(self.perform_add)
+        buttons_layout.addWidget(self.add_button)
+
+        self.subtract_button = QPushButton('Subtract')
+        self.subtract_button.clicked.connect(self.perform_subtract)
+        buttons_layout.addWidget(self.subtract_button)
+
+        self.multiply_button = QPushButton('Multiply')
+        self.multiply_button.clicked.connect(self.perform_multiply)
+        buttons_layout.addWidget(self.multiply_button)
+
+        self.transpose_button = QPushButton('Transpose')
+        self.transpose_button.clicked.connect(self.perform_transpose)
+        buttons_layout.addWidget(self.transpose_button)
+
+        self.determinant_button = QPushButton('Determinant')
+        self.determinant_button.clicked.connect(self.perform_determinant)
+        buttons_layout.addWidget(self.determinant_button)
+
+        self.inverse_button = QPushButton('Inverse')
+        self.inverse_button.clicked.connect(self.perform_inverse)
+        buttons_layout.addWidget(self.inverse_button)
+
+        layout.addLayout(buttons_layout)
+        tab.setLayout(layout)
+
+        return tab
+
+    
     def create_financial_calculator_tab(self):
         return self.create_calculator_tab([], FINANCIAL_FUNCTIONS)
 
@@ -125,41 +204,27 @@ class MainWindow(QMainWindow):
                 input_line.setText(result)
             except ValueError:
                 input_line.setText("Ошибка")
+        elif text in ['sin', 'cos', 'tan', 'log', 'sqrt', '∫', 'd/dx']:
+            input_line.setText(input_line.text() + text + '(')
         elif text == '=':
             expression = input_line.text()
-            try:
-                result = sympify(expression).evalf()
 
-                if '∫' in expression:
-                    parts = expression.split('∫')
-                    if '|' in parts[1]:
-                        expr, bounds = parts[1].split('|')
-                        a, b = map(float, bounds.split(','))
-                        result = self.integrate(expr, a, b)
-                        input_line.setText(str(result))
-                    else:
-                        expr = parts[1]
-                        result = self.integrate(expr)
-                        input_line.setText(str(result))
-                elif 'd/dx' in expression:
-                    parts = expression.split('d/dx')
-                    expr = parts[1]
-                    result = self.differentiate(expr)
-                    input_line.setText(str(result))
+            try:
+                if expression.startswith('∫(') or expression.startswith('d/dx('):
+                    result = self.engineering_calculator.evaluate(expression)
                 else:
-                    if '.' in expression:
-                        decimal_places = max(
-                            len(part.split('.')[1]) for part in expression.split() if '.' in part
-                        )
-                        input_line.setText(f"{result:.{decimal_places}f}")
-                    else:
-                        input_line.setText(f"{int(result)}")
+                    result = sp.sympify(expression).evalf()
+
+                # Проверяем, является ли результат целым числом
+                if result == int(result):
+                    input_line.setText(str(int(result)))
+                else:
+                    # Для дробных чисел убираем лишние нули после запятой
+                    input_line.setText(f"{result:.10f}".rstrip('0').rstrip('.'))
             except Exception as e:
-                input_line.setText("Ошибка")
+                input_line.setText(f"Ошибка: {e}")
         else:
             input_line.setText(input_line.text() + text)
-
-
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -173,9 +238,10 @@ class MainWindow(QMainWindow):
         }
 
         additional_keys = {
-            Qt.Key.Key_S: 'sin(', Qt.Key.Key_O: 'cos(', Qt.Key.Key_T: 'tan(',
-            Qt.Key.Key_L: 'log(', Qt.Key.Key_AsciiCircum: '^', Qt.Key.Key_Q: 'sqrt(',
-            Qt.Key.Key_I: '∫(', Qt.Key.Key_D: 'd/dx', Qt.Key.Key_X: 'x', Qt.Key.Key_Y: 'y', Qt.Key.Key_Z: 'z', Qt.Key.Key_A: 'a', Qt.Key.Key_B: 'b'
+            Qt.Key.Key_S: 'sin', Qt.Key.Key_O: 'cos', Qt.Key.Key_T: 'tan',
+            Qt.Key.Key_L: 'log', Qt.Key.Key_AsciiCircum: '^', Qt.Key.Key_Q: 'sqrt',
+            Qt.Key.Key_I: '∫', Qt.Key.Key_D: 'd/dx', Qt.Key.Key_X: 'x', Qt.Key.Key_Y: 'y',
+            Qt.Key.Key_Z: 'z', Qt.Key.Key_A: 'a', Qt.Key.Key_B: 'b'
         }
 
         key_map.update(additional_keys)
@@ -184,3 +250,89 @@ class MainWindow(QMainWindow):
             current_tab = self.tab_widget.currentWidget()
             input_line = current_tab.findChild(QLineEdit)
             self.on_button_click(key_map[key], input_line)
+
+    def set_matrix_size(self):
+        rows = self.rows_spinbox.value()
+        cols = self.cols_spinbox.value()
+        matrices_count = self.matrices_count_spinbox.value()
+
+        # Очистка макетов матриц
+        for matrix_layout in self.matrix_layouts:
+            for i in reversed(range(matrix_layout.count())):
+                widget = matrix_layout.itemAt(i).widget()
+                if widget is not None:
+                    widget.setParent(None)
+
+        self.matrices = [[[QLineEdit() for _ in range(cols)] for _ in range(rows)] for _ in range(matrices_count)]
+
+        for k, matrix in enumerate(self.matrices):
+            for i in range(rows):
+                for j in range(cols):
+                    self.matrix_layouts[k].addWidget(matrix[i][j], i, j)
+
+    def get_matrix(self, matrix_layout):
+        rows = self.rows_spinbox.value()
+        cols = self.cols_spinbox.value()
+        matrix = []
+        for i in range(rows):
+            row = []
+            for j in range(cols):
+                cell_value = matrix_layout.itemAtPosition(i, j).widget().text()
+                try:
+                    row.append(float(cell_value))
+                except ValueError:
+                    row.append(0)
+            matrix.append(row)
+        return matrix
+
+    def perform_add(self):
+        matrix1 = self.get_matrix(self.matrix_layouts[0])
+        matrix2 = self.get_matrix(self.matrix_layouts[1])
+        result = self.matrix_calculator.add(matrix1, matrix2)
+        self.display_result(result)
+
+    def perform_subtract(self):
+        matrix1 = self.get_matrix(self.matrix_layouts[0])
+        matrix2 = self.get_matrix(self.matrix_layouts[1])
+        result = self.matrix_calculator.subtract(matrix1, matrix2)
+        self.display_result(result)
+
+    def perform_multiply(self):
+        matrix1 = self.get_matrix(self.matrix_layouts[0])
+        matrix2 = self.get_matrix(self.matrix_layouts[1])
+        result = self.matrix_calculator.multiply(matrix1, matrix2)
+        self.display_result(result)
+
+    def perform_transpose(self):
+        matrix1 = self.get_matrix(self.matrix_layouts[0])
+        result = self.matrix_calculator.transpose(matrix1)
+        self.display_result(result)
+
+    def perform_determinant(self):
+        matrix1 = self.get_matrix(self.matrix_layouts[0])
+        result = self.matrix_calculator.determinant(matrix1)
+        self.display_result(result)
+
+    def perform_inverse(self):
+        matrix1 = self.get_matrix(self.matrix_layouts[0])
+        result = self.matrix_calculator.inverse(matrix1)
+        self.display_result(result)
+
+    def display_result(self, result):
+        if isinstance(result, list):
+            # Удалим старые виджеты результата, если они существуют
+            for i in reversed(range(self.result_layout.count())):
+                widget = self.result_layout.itemAt(i).widget()
+                if widget is not None:
+                    widget.setParent(None)
+
+            # Отобразим результат в виде матрицы
+            rows = len(result)
+            cols = len(result[0])
+            result_matrix = [[QLineEdit(str(result[i][j])) for j in range(cols)] for i in range(rows)]
+            for i in range(rows):
+                for j in range(cols):
+                    self.result_layout.addWidget(result_matrix[i][j], i, j)
+        else:
+            # Если результат не матрица, выводим его в виде строки
+            self.result_display.setText(str(result))
