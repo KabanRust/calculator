@@ -46,32 +46,45 @@ class EngineeringCalculator(SimpleCalculator, QWidget):
         return math.factorial(int(a))
 
     def integrate(self, expression):
-        expr = sp.sympify(expression)
-        result = sp.integrate(expr, self.x)
-        return result
+        try:
+            expr = sp.sympify(expression)
+            result = sp.integrate(expr, self.x)
+            return result
+        except sp.SympifyError as e:
+            return f"Ошибка в интеграле: {e}"
+        except Exception as e:
+            return f"Ошибка: {e}"
 
     def differentiate(self, expression):
-        expr = sp.sympify(expression)
-        result = sp.diff(expr, self.x)
-        return result
+        try:
+            expr = sp.sympify(expression)
+            result = sp.diff(expr, self.x)
+            return result
+        except sp.SympifyError as e:
+            return f"Ошибка в производной: {e}"
+        except Exception as e:
+            return f"Ошибка: {e}"
+
 
     def evaluate(self, expression):
         try:
-           # Обработка интегралов и производных
+            # Заменяем ^ на ** для совместимости
+            expression = expression.replace('^', '**')
+            
+            # Обработка интегралов
             if expression.startswith('∫') and expression.endswith(')'):
                 expr = expression[2:-1]  # Убираем символы '∫(' и ')'
                 result = self.integrate(expr)
+            # Обработка производных
             elif expression.startswith('d/dx') and expression.endswith(')'):
                 expr = expression[5:-1]  # Убираем символы 'd/dx(' и ')'
                 result = self.differentiate(expr)
             else:
+                # Общая обработка выражений
                 result = sp.sympify(expression).evalf()
 
-            # Проверка на производную интеграла или интеграл производной
-            if 'Subs(Derivative(' in str(result) or 'Derivative(Integral(' in str(result):
-                # Вернуть исходное выражение без интеграла или производной
-                return expression.replace('∫(', '').replace('d/dx(', '').replace(')', '')
-
             return result
+        except sp.SympifyError as e:
+            return f"Ошибка: Невозможно преобразовать выражение ({e})"
         except Exception as e:
             return f"Ошибка: {e}"

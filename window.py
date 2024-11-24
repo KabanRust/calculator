@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QGridLayout, QLabel, QSpinBox
+from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QGridLayout, QLabel, QSpinBox, QMessageBox
 from PySide6.QtCore import Qt
 from sympy import sympify
 import sympy as sp
@@ -55,16 +55,6 @@ class MainWindow(QMainWindow):
         self.input_line = QLineEdit()
         layout.addWidget(self.input_line)
 
-        # Изначально скрываем строки для пределов интегралов
-        self.lower_bound = QLineEdit()
-        self.lower_bound.setPlaceholderText("Нижний предел")
-        self.upper_bound = QLineEdit()
-        self.upper_bound.setPlaceholderText("Верхний предел")
-        self.lower_bound.hide()
-        self.upper_bound.hide()
-        layout.addWidget(self.lower_bound)
-        layout.addWidget(self.upper_bound)
-
         button_layout = QVBoxLayout()
         base_buttons = [
             ('C', '←', '%', '(', ')'),
@@ -76,7 +66,7 @@ class MainWindow(QMainWindow):
         ]
 
         if include_extra_buttons:
-            extra_buttons = ('x', 'y', 'z', 'a', 'b')
+            extra_buttons = ('x', 'y')
             base_buttons[4] += extra_buttons
 
         for row in base_buttons:
@@ -111,14 +101,14 @@ class MainWindow(QMainWindow):
         self.matrices_count_spinbox.setRange(1, 2)
 
         size_layout = QHBoxLayout()
-        size_layout.addWidget(QLabel('Rows:'))
+        size_layout.addWidget(QLabel('Строки:'))
         size_layout.addWidget(self.rows_spinbox)
-        size_layout.addWidget(QLabel('Cols:'))
+        size_layout.addWidget(QLabel('Столбцы:'))
         size_layout.addWidget(self.cols_spinbox)
-        size_layout.addWidget(QLabel('Matrices:'))
+        size_layout.addWidget(QLabel('Матрицы:'))
         size_layout.addWidget(self.matrices_count_spinbox)
 
-        self.set_size_button = QPushButton('Set Size')
+        self.set_size_button = QPushButton('Задайте размерность')
         self.set_size_button.clicked.connect(self.set_matrix_size)
         size_layout.addWidget(self.set_size_button)
         layout.addLayout(size_layout)
@@ -139,27 +129,27 @@ class MainWindow(QMainWindow):
         # Кнопки операций
         buttons_layout = QHBoxLayout()
 
-        self.add_button = QPushButton('Add')
+        self.add_button = QPushButton('Cложение')
         self.add_button.clicked.connect(self.perform_add)
         buttons_layout.addWidget(self.add_button)
 
-        self.subtract_button = QPushButton('Subtract')
+        self.subtract_button = QPushButton('Вычитание')
         self.subtract_button.clicked.connect(self.perform_subtract)
         buttons_layout.addWidget(self.subtract_button)
 
-        self.multiply_button = QPushButton('Multiply')
+        self.multiply_button = QPushButton('Умножение')
         self.multiply_button.clicked.connect(self.perform_multiply)
         buttons_layout.addWidget(self.multiply_button)
 
-        self.transpose_button = QPushButton('Transpose')
+        self.transpose_button = QPushButton('Транспонирование')
         self.transpose_button.clicked.connect(self.perform_transpose)
         buttons_layout.addWidget(self.transpose_button)
 
-        self.determinant_button = QPushButton('Determinant')
+        self.determinant_button = QPushButton('Детерминант')
         self.determinant_button.clicked.connect(self.perform_determinant)
         buttons_layout.addWidget(self.determinant_button)
 
-        self.inverse_button = QPushButton('Inverse')
+        self.inverse_button = QPushButton('Инверсия')
         self.inverse_button.clicked.connect(self.perform_inverse)
         buttons_layout.addWidget(self.inverse_button)
 
@@ -173,7 +163,87 @@ class MainWindow(QMainWindow):
         return self.create_calculator_tab([], FINANCIAL_FUNCTIONS)
 
     def create_graph_calculator_tab(self):
-        return self.create_calculator_tab([], GRAPHING_FUNCTIONS, include_extra_buttons=True)
+        tab = QWidget()
+        layout = QVBoxLayout()
+        
+        # Верхняя панель с вводом функции и кнопками
+        top_panel = QHBoxLayout()
+        
+        # Поле ввода функции
+        self.function_input = QLineEdit()
+        self.function_input.setPlaceholderText("Введите функцию (например: x**2)")
+        top_panel.addWidget(self.function_input)
+        
+        # Кнопки управления
+        plot_button = QPushButton("Построить график")
+        plot_button.clicked.connect(self.plot_graph)
+        clear_button = QPushButton("Очистить")
+        clear_button.clicked.connect(self.clear_graph)
+        top_panel.addWidget(plot_button)
+        top_panel.addWidget(clear_button)
+        
+        layout.addLayout(top_panel)
+        
+        # Панель настроек диапазона
+        range_panel = QHBoxLayout()
+        range_panel.addWidget(QLabel("X от:"))
+        self.x_min = QSpinBox()
+        self.x_min.setRange(-1000, 1000)
+        self.x_min.setValue(-10)
+        range_panel.addWidget(self.x_min)
+        
+        range_panel.addWidget(QLabel("до:"))
+        self.x_max = QSpinBox()
+        self.x_max.setRange(-1000, 1000)
+        self.x_max.setValue(10)
+        range_panel.addWidget(self.x_max)
+        
+        range_panel.addWidget(QLabel("Y от:"))
+        self.y_min = QSpinBox()
+        self.y_min.setRange(-1000, 1000)
+        self.y_min.setValue(-10)
+        range_panel.addWidget(self.y_min)
+        
+        range_panel.addWidget(QLabel("до:"))
+        self.y_max = QSpinBox()
+        self.y_max.setRange(-1000, 1000)
+        self.y_max.setValue(10)
+        range_panel.addWidget(self.y_max)
+        
+        apply_range = QPushButton("Применить диапазон")
+        apply_range.clicked.connect(self.apply_graph_range)
+        range_panel.addWidget(apply_range)
+        
+        layout.addLayout(range_panel)
+        
+        # Добавляем холст для графика
+        self.graph_canvas = self.graph_calculator.get_canvas()
+        layout.addWidget(self.graph_canvas)
+        
+        tab.setLayout(layout)
+        return tab
+
+    def plot_graph(self):
+        expression = self.function_input.text()
+        result = self.graph_calculator.plot_function(
+            expression,
+            x_range=(self.x_min.value(), self.x_max.value()),
+            step=0.1
+        )
+        if result is not True:
+            QMessageBox.warning(self, "Ошибка", str(result))
+
+    def clear_graph(self):
+        self.graph_calculator.clear_plot()
+        self.function_input.clear()
+
+    def apply_graph_range(self):
+        self.graph_calculator.set_plot_range(
+            self.x_min.value(),
+            self.x_max.value(),
+            self.y_min.value(),
+            self.y_max.value()
+        )
 
     def create_number_calculator_tab(self):
         return self.create_calculator_tab([], [])
@@ -205,22 +275,24 @@ class MainWindow(QMainWindow):
             except ValueError:
                 input_line.setText("Ошибка")
         elif text in ['sin', 'cos', 'tan', 'log', 'sqrt', '∫', 'd/dx']:
-            input_line.setText(input_line.text() + text + '(')
+            input_line.setText(input_line.text() + text)
         elif text == '=':
             expression = input_line.text()
-
             try:
                 if expression.startswith('∫(') or expression.startswith('d/dx('):
                     result = self.engineering_calculator.evaluate(expression)
+                    # Преобразуем символьный результат в строку
+                    input_line.setText(str(result))
                 else:
                     result = sp.sympify(expression).evalf()
-
-                # Проверяем, является ли результат целым числом
-                if result == int(result):
-                    input_line.setText(str(int(result)))
-                else:
-                    # Для дробных чисел убираем лишние нули после запятой
-                    input_line.setText(f"{result:.10f}".rstrip('0').rstrip('.'))
+                    # Проверяем, является ли результат числом
+                    if isinstance(result, (float, int)):
+                        if float(result).is_integer():
+                            input_line.setText(str(int(result)))
+                        else:
+                            input_line.setText(f"{float(result):.10f}".rstrip('0').rstrip('.'))
+                    else:
+                        input_line.setText(str(result))
             except Exception as e:
                 input_line.setText(f"Ошибка: {e}")
         else:
@@ -241,7 +313,6 @@ class MainWindow(QMainWindow):
             Qt.Key.Key_S: 'sin', Qt.Key.Key_O: 'cos', Qt.Key.Key_T: 'tan',
             Qt.Key.Key_L: 'log', Qt.Key.Key_AsciiCircum: '^', Qt.Key.Key_Q: 'sqrt',
             Qt.Key.Key_I: '∫', Qt.Key.Key_D: 'd/dx', Qt.Key.Key_X: 'x', Qt.Key.Key_Y: 'y',
-            Qt.Key.Key_Z: 'z', Qt.Key.Key_A: 'a', Qt.Key.Key_B: 'b'
         }
 
         key_map.update(additional_keys)
