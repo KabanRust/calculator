@@ -1,70 +1,77 @@
 from PySide6.QtWidgets import QWidget
-from sympy import sympify
+import math
 from constants import FINANCIAL_FUNCTIONS
 
 class FinancialCalculator(QWidget):
     def __init__(self):
-        self.functions = FINANCIAL_FUNCTIONS
-
         super().__init__()
-
-    def evaluate(self, expression):
+        self.functions = FINANCIAL_FUNCTIONS
+    
+    def calculate_pv(self, fv, rate, periods):
+        """
+        Расчет текущей стоимости (Present Value)
+        fv: будущая стоимость
+        rate: процентная ставка (в долях)
+        periods: количество периодов
+        """
         try:
-            result = sympify(expression).evalf()
-            return float(result)
+            return fv / ((1 + rate) ** periods)
         except Exception as e:
-            return f"Ошибка: {e}"
+            return f"Ошибка в расчете PV: {e}"
 
-    def calculate_fv(self, present_value, rate, periods):
+    def calculate_fv(self, pv, rate, periods):
+        """
+        Расчет будущей стоимости (Future Value)
+        pv: текущая стоимость
+        rate: процентная ставка (в долях)
+        periods: количество периодов
+        """
         try:
-            rate = float(rate) / 100
-            periods = int(periods)
-            fv = float(present_value) * ((1 + rate) ** periods)
-            return fv
+            return pv * ((1 + rate) ** periods)
         except Exception as e:
-            return f"Ошибка: {e}"
+            return f"Ошибка в расчете FV: {e}"
 
-    def calculate_pv(self, future_value, rate, periods):
+    def calculate_npv(self, initial_investment, cash_flows, rate):
+        """
+        Расчет чистой приведенной стоимости (Net Present Value)
+        initial_investment: начальные инвестиции (отрицательное число)
+        cash_flows: список денежных потоков
+        rate: процентная ставка (в долях)
+        """
         try:
-            rate = float(rate) / 100
-            periods = int(periods)
-            pv = float(future_value) / ((1 + rate) ** periods)
-            return pv
-        except Exception as e:
-            return f"Ошибка: {e}"
-
-    def calculate_npv(self, rate, cashflows):
-        try:
-            rate = float(rate) / 100
-            cashflows = [float(x) for x in cashflows]
-            npv = sum(cashflows[i] / ((1 + rate) ** i) for i in range(len(cashflows)))
+            npv = initial_investment
+            for t, cf in enumerate(cash_flows, 1):
+                npv += cf / ((1 + rate) ** t)
             return npv
         except Exception as e:
-            return f"Ошибка: {e}"
+            return f"Ошибка в расчете NPV: {e}"
 
-    def calculate_irr(self, cashflows):
+    def calculate_irr(self, cash_flows, guess=0.1, tolerance=0.0001, max_iterations=100):
+        """
+        Расчет внутренней нормы доходности (Internal Rate of Return)
+        cash_flows: список денежных потоков (первый - начальные инвестиции)
+        guess: начальное предположение для ставки
+        tolerance: допустимая погрешность
+        max_iterations: максимальное число итераций
+        """
         try:
-            irr = sympify('irr(cashflows)')
-            return irr
+            rate = guess
+            for i in range(max_iterations):
+                npv = sum(cf / (1 + rate) ** t for t, cf in enumerate(cash_flows))
+                if abs(npv) < tolerance:
+                    return rate
+                
+                # Производная NPV по ставке
+                dnpv = sum(-t * cf / (1 + rate) ** (t + 1) for t, cf in enumerate(cash_flows))
+                
+                # Метод Ньютона-Рафсона
+                new_rate = rate - npv / dnpv
+                
+                if abs(new_rate - rate) < tolerance:
+                    return new_rate
+                
+                rate = new_rate
+            
+            return rate
         except Exception as e:
-            return f"Ошибка: {e}"
-
-    def calculate_payback_period(self, initial_investment, cashflows):
-        try:
-            initial_investment = float(initial_investment)
-            cashflows = [float(x) for x in cashflows]
-            cumulative_cashflow = 0
-            for i, cashflow in enumerate(cashflows):
-                cumulative_cashflow += cashflow
-                if cumulative_cashflow >= initial_investment:
-                    return i + 1
-            return f"Ошибка: Инвестиция не окупается за заданный период"
-        except Exception as e:
-            return f"Ошибка: {e}"
-
-    def calculate_depreciation(self, initial_value, residual_value, years):
-        try:
-            depreciation = (float(initial_value) - float(residual_value)) / float(years)
-            return depreciation
-        except Exception as e:
-            return f"Ошибка: {e}"
+            return f"Ошибка в расчете IRR: {e}"

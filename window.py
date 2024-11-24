@@ -1,8 +1,8 @@
-from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QGridLayout, QLabel, QSpinBox, QMessageBox, QGroupBox, QTextEdit
+from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QGridLayout, QLabel, QSpinBox, QMessageBox, QGroupBox, QTextEdit, QComboBox, QFormLayout, QDoubleSpinBox
 from PySide6.QtCore import Qt
 from sympy import sympify
 import sympy as sp
-from constants import SIMPLE_OPERATORS, SIMPLE_FUNCTIONS, ENGINEERING_OPERATORS, ENGINEERING_FUNCTIONS, FINANCIAL_FUNCTIONS, ACCOUNTING_FUNCTIONS, GRAPHING_FUNCTIONS, CURRENCY_SYMBOLS, PROGRAMMABLE_FUNCTIONS
+from constants import SIMPLE_OPERATORS, SIMPLE_FUNCTIONS, ENGINEERING_OPERATORS, ENGINEERING_FUNCTIONS, FINANCIAL_FUNCTIONS, ACCOUNTING_FUNCTIONS, GRAPHING_FUNCTIONS, CURRENCY_SYMBOLS, PROGRAMMABLE_FUNCTIONS, BASES
 import modules
 
 class MainWindow(QMainWindow):
@@ -157,10 +157,152 @@ class MainWindow(QMainWindow):
         tab.setLayout(layout)
 
         return tab
-
     
     def create_financial_calculator_tab(self):
-        return self.create_calculator_tab([], FINANCIAL_FUNCTIONS)
+        tab = QWidget()
+        layout = QVBoxLayout()
+        
+        # Группа для PV (Present Value)
+        pv_group = QGroupBox("Расчет текущей стоимости (PV)")
+        pv_layout = QGridLayout()
+        
+        self.pv_fv_input = QLineEdit()
+        self.pv_rate_input = QLineEdit()
+        self.pv_periods_input = QLineEdit()
+        self.pv_result = QLineEdit()
+        self.pv_result.setReadOnly(True)
+        
+        pv_calc_button = QPushButton("Рассчитать PV")
+        pv_calc_button.clicked.connect(self.calculate_pv)
+        
+        pv_layout.addWidget(QLabel("Будущая стоимость (FV):"), 0, 0)
+        pv_layout.addWidget(self.pv_fv_input, 0, 1)
+        pv_layout.addWidget(QLabel("Ставка (%):"), 1, 0)
+        pv_layout.addWidget(self.pv_rate_input, 1, 1)
+        pv_layout.addWidget(QLabel("Количество периодов:"), 2, 0)
+        pv_layout.addWidget(self.pv_periods_input, 2, 1)
+        pv_layout.addWidget(pv_calc_button, 3, 0)
+        pv_layout.addWidget(self.pv_result, 3, 1)
+        
+        pv_group.setLayout(pv_layout)
+        
+        # Группа для FV (Future Value)
+        fv_group = QGroupBox("Расчет будущей стоимости (FV)")
+        fv_layout = QGridLayout()
+        
+        self.fv_pv_input = QLineEdit()
+        self.fv_rate_input = QLineEdit()
+        self.fv_periods_input = QLineEdit()
+        self.fv_result = QLineEdit()
+        self.fv_result.setReadOnly(True)
+        
+        fv_calc_button = QPushButton("Рассчитать FV")
+        fv_calc_button.clicked.connect(self.calculate_fv)
+        
+        fv_layout.addWidget(QLabel("Текущая стоимость (PV):"), 0, 0)
+        fv_layout.addWidget(self.fv_pv_input, 0, 1)
+        fv_layout.addWidget(QLabel("Ставка (%):"), 1, 0)
+        fv_layout.addWidget(self.fv_rate_input, 1, 1)
+        fv_layout.addWidget(QLabel("Количество периодов:"), 2, 0)
+        fv_layout.addWidget(self.fv_periods_input, 2, 1)
+        fv_layout.addWidget(fv_calc_button, 3, 0)
+        fv_layout.addWidget(self.fv_result, 3, 1)
+        
+        fv_group.setLayout(fv_layout)
+        
+        # Группа для NPV (Net Present Value)
+        npv_group = QGroupBox("Расчет чистой приведенной стоимости (NPV)")
+        npv_layout = QGridLayout()
+        
+        self.npv_investment_input = QLineEdit()
+        self.npv_flows_input = QLineEdit()
+        self.npv_rate_input = QLineEdit()
+        self.npv_result = QLineEdit()
+        self.npv_result.setReadOnly(True)
+        
+        npv_calc_button = QPushButton("Рассчитать NPV")
+        npv_calc_button.clicked.connect(self.calculate_npv)
+        
+        npv_layout.addWidget(QLabel("Начальные инвестиции:"), 0, 0)
+        npv_layout.addWidget(self.npv_investment_input, 0, 1)
+        npv_layout.addWidget(QLabel("Денежные потоки (через запятую):"), 1, 0)
+        npv_layout.addWidget(self.npv_flows_input, 1, 1)
+        npv_layout.addWidget(QLabel("Ставка (%):"), 2, 0)
+        npv_layout.addWidget(self.npv_rate_input, 2, 1)
+        npv_layout.addWidget(npv_calc_button, 3, 0)
+        npv_layout.addWidget(self.npv_result, 3, 1)
+        
+        npv_group.setLayout(npv_layout)
+        
+        # Группа для IRR (Internal Rate of Return)
+        irr_group = QGroupBox("Расчет внутренней нормы доходности (IRR)")
+        irr_layout = QGridLayout()
+        
+        self.irr_flows_input = QLineEdit()
+        self.irr_result = QLineEdit()
+        self.irr_result.setReadOnly(True)
+        
+        irr_calc_button = QPushButton("Рассчитать IRR")
+        irr_calc_button.clicked.connect(self.calculate_irr)
+        
+        irr_layout.addWidget(QLabel("Денежные потоки (через запятую):"), 0, 0)
+        irr_layout.addWidget(self.irr_flows_input, 0, 1)
+        irr_layout.addWidget(irr_calc_button, 1, 0)
+        irr_layout.addWidget(self.irr_result, 1, 1)
+        
+        irr_group.setLayout(irr_layout)
+        
+        # Добавляем все группы в основной layout
+        layout.addWidget(pv_group)
+        layout.addWidget(fv_group)
+        layout.addWidget(npv_group)
+        layout.addWidget(irr_group)
+        
+        tab.setLayout(layout)
+        return tab
+
+    # Добавьте следующие методы в класс MainWindow
+
+    def calculate_pv(self):
+        try:
+            fv = float(self.pv_fv_input.text())
+            rate = float(self.pv_rate_input.text()) / 100
+            periods = float(self.pv_periods_input.text())
+            
+            result = self.financial_calculator.calculate_pv(fv, rate, periods)
+            self.pv_result.setText(f"{result:.2f}")
+        except Exception as e:
+            self.pv_result.setText(f"Ошибка: {str(e)}")
+
+    def calculate_fv(self):
+        try:
+            pv = float(self.fv_pv_input.text())
+            rate = float(self.fv_rate_input.text()) / 100
+            periods = float(self.fv_periods_input.text())
+            
+            result = self.financial_calculator.calculate_fv(pv, rate, periods)
+            self.fv_result.setText(f"{result:.2f}")
+        except Exception as e:
+            self.fv_result.setText(f"Ошибка: {str(e)}")
+
+    def calculate_npv(self):
+        try:
+            investment = float(self.npv_investment_input.text())
+            flows = [float(x.strip()) for x in self.npv_flows_input.text().split(',')]
+            rate = float(self.npv_rate_input.text()) / 100
+            
+            result = self.financial_calculator.calculate_npv(investment, flows, rate)
+            self.npv_result.setText(f"{result:.2f}")
+        except Exception as e:
+            self.npv_result.setText(f"Ошибка: {str(e)}")
+
+    def calculate_irr(self):
+        try:
+            flows = [float(x.strip()) for x in self.irr_flows_input.text().split(',')]
+            result = self.financial_calculator.calculate_irr(flows)
+            self.irr_result.setText(f"{result * 100:.2f}%")
+        except Exception as e:
+            self.irr_result.setText(f"Ошибка: {str(e)}")
 
     def create_graph_calculator_tab(self):
         tab = QWidget()
@@ -246,10 +388,246 @@ class MainWindow(QMainWindow):
         )
 
     def create_number_calculator_tab(self):
-        return self.create_calculator_tab([], [])
+        tab = QWidget()
+        layout = QVBoxLayout()
+        
+        # Создаем группу для ввода числа и выбора исходной системы счисления
+        input_layout = QHBoxLayout()
+        self.number_input = QLineEdit()
+        self.number_input.setPlaceholderText("Введите число")
+        
+        self.from_base_combo = QComboBox()
+        for base_name, base in BASES.items():
+            self.from_base_combo.addItem(base_name, base)
+        
+        input_layout.addWidget(QLabel("Число:"))
+        input_layout.addWidget(self.number_input)
+        input_layout.addWidget(QLabel("Из:"))
+        input_layout.addWidget(self.from_base_combo)
+        
+        # Создаем группу для выбора целевой системы счисления и результата
+        output_layout = QHBoxLayout()
+        self.to_base_combo = QComboBox()
+        for base_name, base in BASES.items():
+            self.to_base_combo.addItem(base_name, base)
+        
+        self.result_display = QLineEdit()
+        self.result_display.setReadOnly(True)
+        
+        output_layout.addWidget(QLabel("В:"))
+        output_layout.addWidget(self.to_base_combo)
+        output_layout.addWidget(QLabel("Результат:"))
+        output_layout.addWidget(self.result_display)
+        
+        # Кнопка конвертации
+        convert_button = QPushButton("Конвертировать")
+        convert_button.clicked.connect(self.convert_number)
+        
+        # Добавляем все элементы на вкладку
+        layout.addLayout(input_layout)
+        layout.addLayout(output_layout)
+        layout.addWidget(convert_button)
+        
+        # Добавляем сетку кнопок для ввода чисел
+        button_grid = QGridLayout()
+        buttons = [
+            ['7', '8', '9', 'A'],
+            ['4', '5', '6', 'B'],
+            ['1', '2', '3', 'C'],
+            ['0', 'D', 'E', 'F']
+        ]
+        
+        for i, row in enumerate(buttons):
+            for j, text in enumerate(row):
+                button = QPushButton(text)
+                button.clicked.connect(lambda checked, t=text: self.on_number_button_click(t))
+                button_grid.addWidget(button, i, j)
+        
+        layout.addLayout(button_grid)
+        
+        # Добавляем кнопку очистки
+        clear_button = QPushButton("Очистить")
+        clear_button.clicked.connect(self.clear_number_input)
+        layout.addWidget(clear_button)
+        
+        tab.setLayout(layout)
+        return tab
+
+    def convert_number(self):
+        number = self.number_input.text()
+        from_base = self.from_base_combo.currentData()
+        to_base = self.to_base_combo.currentData()
+        
+        # Проверяем валидность введенного числа
+        if not self.number_calculator.validate_number(number, from_base):
+            self.result_display.setText("Ошибка: Неверный формат числа")
+            return
+            
+        result = self.number_calculator.convert_number(number, from_base, to_base)
+        self.result_display.setText(result)
+
+    def on_number_button_click(self, text):
+        current_text = self.number_input.text()
+        self.number_input.setText(current_text + text)
+
+    def clear_number_input(self):
+        self.number_input.clear()
+        self.result_display.clear()
 
     def create_accounting_calculator_tab(self):
-        return self.create_calculator_tab([], ACCOUNTING_FUNCTIONS)
+        tab = QWidget()
+        layout = QVBoxLayout()
+        
+        # Создаем вкладки для разных типов расчетов
+        sub_tabs = QTabWidget()
+        
+        # Вкладка расчета амортизации
+        depreciation_tab = QWidget()
+        depreciation_layout = QFormLayout()
+        
+        self.initial_cost = QLineEdit()
+        self.salvage_value = QLineEdit()
+        self.useful_life = QSpinBox()
+        self.useful_life.setRange(1, 50)
+        self.depreciation_method = QComboBox()
+        self.depreciation_method.addItems(['Линейный метод', 'Ускоренный метод'])
+        
+        depreciation_layout.addRow("Начальная стоимость:", self.initial_cost)
+        depreciation_layout.addRow("Ликвидационная стоимость:", self.salvage_value)
+        depreciation_layout.addRow("Срок использования (лет):", self.useful_life)
+        depreciation_layout.addRow("Метод амортизации:", self.depreciation_method)
+        
+        calculate_depreciation_btn = QPushButton("Рассчитать амортизацию")
+        calculate_depreciation_btn.clicked.connect(self.calculate_depreciation)
+        depreciation_layout.addRow(calculate_depreciation_btn)
+        
+        self.depreciation_result = QTextEdit()
+        self.depreciation_result.setReadOnly(True)
+        depreciation_layout.addRow("Результат:", self.depreciation_result)
+        
+        depreciation_tab.setLayout(depreciation_layout)
+        
+        # Вкладка расчета кредита
+        loan_tab = QWidget()
+        loan_layout = QFormLayout()
+        
+        self.loan_amount = QLineEdit()
+        self.loan_rate = QDoubleSpinBox()
+        self.loan_rate.setRange(0.1, 100)
+        self.loan_years = QSpinBox()
+        self.loan_years.setRange(1, 30)
+        
+        loan_layout.addRow("Сумма кредита:", self.loan_amount)
+        loan_layout.addRow("Годовая ставка (%):", self.loan_rate)
+        loan_layout.addRow("Срок (лет):", self.loan_years)
+        
+        calculate_loan_btn = QPushButton("Рассчитать график платежей")
+        calculate_loan_btn.clicked.connect(self.calculate_loan)
+        loan_layout.addRow(calculate_loan_btn)
+        
+        self.loan_result = QTextEdit()
+        self.loan_result.setReadOnly(True)
+        loan_layout.addRow("График платежей:", self.loan_result)
+        
+        loan_tab.setLayout(loan_layout)
+        
+        # Вкладка расчета НДС
+        vat_tab = QWidget()
+        vat_layout = QFormLayout()
+        
+        self.vat_amount = QLineEdit()
+        self.vat_rate = QDoubleSpinBox()
+        self.vat_rate.setRange(0, 20)
+        self.vat_rate.setValue(20)
+        
+        vat_layout.addRow("Сумма без НДС:", self.vat_amount)
+        vat_layout.addRow("Ставка НДС (%):", self.vat_rate)
+        
+        calculate_vat_btn = QPushButton("Рассчитать НДС")
+        calculate_vat_btn.clicked.connect(self.calculate_vat)
+        vat_layout.addRow(calculate_vat_btn)
+        
+        self.vat_result = QTextEdit()
+        self.vat_result.setReadOnly(True)
+        vat_layout.addRow("Результат:", self.vat_result)
+        
+        vat_tab.setLayout(vat_layout)
+        
+        # Добавляем вкладки
+        sub_tabs.addTab(depreciation_tab, "Амортизация")
+        sub_tabs.addTab(loan_tab, "Кредит")
+        sub_tabs.addTab(vat_tab, "НДС")
+        
+        layout.addWidget(sub_tabs)
+        tab.setLayout(layout)
+        
+        return tab
+
+    def calculate_depreciation(self):
+        try:
+            initial_cost = float(self.initial_cost.text())
+            salvage_value = float(self.salvage_value.text())
+            useful_life = self.useful_life.value()
+            method = 'straight' if self.depreciation_method.currentText() == 'Линейный метод' else 'declining'
+            
+            result = self.accounting_calculator.calculate_depreciation(
+                initial_cost, salvage_value, useful_life, method
+            )
+            
+            if isinstance(result, dict):
+                text = "Расчет амортизации:\n\n"
+                for year, values in result.items():
+                    text += f"Год {year}:\n"
+                    text += f"Амортизация: {values['depreciation']:,.2f}\n"
+                    text += f"Остаточная стоимость: {values['book_value']:,.2f}\n\n"
+                self.depreciation_result.setText(text)
+            else:
+                self.depreciation_result.setText(str(result))
+                
+        except ValueError:
+            self.depreciation_result.setText("Ошибка: Проверьте правильность введенных данных")
+
+    def calculate_loan(self):
+        try:
+            amount = float(self.loan_amount.text())
+            rate = self.loan_rate.value()
+            years = self.loan_years.value()
+            
+            result = self.accounting_calculator.calculate_loan_amortization(amount, rate, years)
+            
+            if isinstance(result, dict):
+                text = "График платежей:\n\n"
+                for period, values in result.items():
+                    text += f"Платеж {period}:\n"
+                    text += f"Сумма платежа: {values['payment']:,.2f}\n"
+                    text += f"Основной долг: {values['principal']:,.2f}\n"
+                    text += f"Проценты: {values['interest']:,.2f}\n"
+                    text += f"Остаток долга: {values['balance']:,.2f}\n\n"
+                self.loan_result.setText(text)
+            else:
+                self.loan_result.setText(str(result))
+                
+        except ValueError:
+            self.loan_result.setText("Ошибка: Проверьте правильность введенных данных")
+
+    def calculate_vat(self):
+        try:
+            amount = float(self.vat_amount.text())
+            rate = self.vat_rate.value()
+            
+            result = self.accounting_calculator.calculate_vat(amount, rate)
+            
+            if isinstance(result, dict):
+                text = "Расчет НДС:\n\n"
+                text += f"Сумма без НДС: {result['amount']:,.2f}\n"
+                text += f"НДС: {result['vat']:,.2f}\n"
+                text += f"Итого с НДС: {result['total']:,.2f}"
+                self.vat_result.setText(text)
+            else:
+                self.vat_result.setText(str(result))
+                
+        except ValueError:
+            self.vat_result.setText("Ошибка: Проверьте правильность введенных данных")
 
     def create_programmable_calculator_tab(self):
         tab = QWidget()
@@ -385,7 +763,84 @@ class MainWindow(QMainWindow):
         self.functions_list.setText(text)
 
     def create_currency_calculator_tab(self):
-        return self.create_calculator_tab([], CURRENCY_SYMBOLS)
+        tab = QWidget()
+        layout = QVBoxLayout()
+
+        # Группа для ввода суммы и выбора валют
+        input_group = QGroupBox("Конвертация валют")
+        input_layout = QGridLayout()
+
+        # Поле для ввода суммы
+        self.amount_input = QLineEdit()
+        self.amount_input.setPlaceholderText("Введите сумму")
+        
+        # Выпадающие списки для выбора валют
+        self.from_currency = QComboBox()
+        self.to_currency = QComboBox()
+        
+        # Заполняем списки доступными валютами
+        currencies = self.currency_calculator.get_available_currencies()
+        self.from_currency.addItems(currencies)
+        self.to_currency.addItems(currencies)
+        
+        # Поле для вывода результата
+        self.result_display = QLineEdit()
+        self.result_display.setReadOnly(True)
+        
+        # Кнопка конвертации
+        convert_button = QPushButton("Конвертировать")
+        convert_button.clicked.connect(self.perform_currency_conversion)
+        
+        # Добавляем виджеты в layout
+        input_layout.addWidget(QLabel("Сумма:"), 0, 0)
+        input_layout.addWidget(self.amount_input, 0, 1)
+        input_layout.addWidget(QLabel("Из валюты:"), 1, 0)
+        input_layout.addWidget(self.from_currency, 1, 1)
+        input_layout.addWidget(QLabel("В валюту:"), 2, 0)
+        input_layout.addWidget(self.to_currency, 2, 1)
+        input_layout.addWidget(convert_button, 3, 0, 1, 2)
+        input_layout.addWidget(QLabel("Результат:"), 4, 0)
+        input_layout.addWidget(self.result_display, 4, 1)
+        
+        input_group.setLayout(input_layout)
+        layout.addWidget(input_group)
+        
+        # Кнопка обновления курсов
+        update_rates_button = QPushButton("Обновить курсы валют")
+        update_rates_button.clicked.connect(self.update_currency_rates)
+        layout.addWidget(update_rates_button)
+        
+        # Добавляем растягивающийся пробел
+        layout.addStretch()
+        
+        tab.setLayout(layout)
+        return tab
+
+    def perform_currency_conversion(self):
+        try:
+            amount = float(self.amount_input.text())
+            from_curr = self.from_currency.currentText()
+            to_curr = self.to_currency.currentText()
+            
+            result = self.currency_calculator.convert_currency(amount, from_curr, to_curr)
+            
+            if isinstance(result, float):
+                formatted_result = self.currency_calculator.format_currency(result, to_curr)
+                self.result_display.setText(formatted_result)
+            else:
+                self.result_display.setText(str(result))
+                
+        except ValueError:
+            self.result_display.setText("Ошибка: Введите корректное число")
+        except Exception as e:
+            self.result_display.setText(f"Ошибка: {str(e)}")
+
+    def update_currency_rates(self):
+        result = self.currency_calculator.update_exchange_rates()
+        if result:
+            QMessageBox.warning(self, "Ошибка", result)
+        else:
+            QMessageBox.information(self, "Успех", "Курсы валют успешно обновлены")
 
     def make_button_callback(self, text, input_line):
         def callback():

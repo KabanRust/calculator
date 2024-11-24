@@ -1,53 +1,65 @@
 from PySide6.QtWidgets import QWidget
-from constants import CURRENCY_SYMBOLS
-
+from decimal import Decimal
 
 class CurrencyCalculator(QWidget):
     def __init__(self):
-        self.currency_symbols = CURRENCY_SYMBOLS
-
         super().__init__()
-
         self.exchange_rates = {
             'USD': 1.0,
             'EUR': 0.92,
-            'GBP': 0.82,
-            'JPY': 134.12,
-            '₸': 460.0,
+            'GBP': 0.79,
+            'JPY': 151.68,
+            'KZT': 449.50
         }
-
-    def convert(self, amount, from_currency, to_currency):
-        """Конвертация из одной валюты в другую"""
+        self.currency_symbols = {
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£',
+            'JPY': '¥',
+            'KZT': '₸'
+        }
+        
+    def convert_currency(self, amount, from_currency, to_currency):
         try:
-            if from_currency not in self.exchange_rates or to_currency not in self.exchange_rates:
-                return f"Ошибка: Некорректные валюты {from_currency} или {to_currency}"
-
-            amount_in_usd = float(amount) / self.exchange_rates[from_currency]
-            converted_amount = amount_in_usd * self.exchange_rates[to_currency]
-
-            return round(converted_amount, 2)
+            amount = Decimal(str(amount))
+            
+            # Если валюты одинаковые, возвращаем исходную сумму
+            if from_currency == to_currency:
+                return float(amount)
+            
+            # Конвертируем в USD как промежуточную валюту, если исходная валюта не USD
+            if from_currency != 'USD':
+                amount = amount / Decimal(str(self.exchange_rates[from_currency]))
+            
+            # Конвертируем из USD в целевую валюту, если целевая валюта не USD
+            if to_currency != 'USD':
+                amount = amount * Decimal(str(self.exchange_rates[to_currency]))
+            
+            return float(amount)
         except Exception as e:
-            return f"Ошибка: {e}"
-
-    def add_exchange_rate(self, currency, rate):
+            return f"Ошибка конвертации: {str(e)}"
+    
+    def update_exchange_rates(self):
+        """
+        Метод для обновления курсов валют.
+        В реальном приложении здесь был бы API запрос к сервису курсов валют.
+        """
         try:
-            self.exchange_rates[currency] = float(rate)
-            return f"Курс валюты {currency} обновлен на {rate}"
+            # Здесь можно добавить реальный API запрос
+            # Например, используя API exchangerate-api.com или подобный сервис
+            pass
         except Exception as e:
-            return f"Ошибка: {e}"
+            return f"Ошибка обновления курсов: {str(e)}"
 
-    def remove_exchange_rate(self, currency):
-        try:
-            if currency in self.exchange_rates:
-                del self.exchange_rates[currency]
-                return f"Курс валюты {currency} удален"
-            else:
-                return f"Ошибка: Валюта {currency} не найдена"
-        except Exception as e:
-            return f"Ошибка: {e}"
+    def get_currency_symbol(self, currency_code):
+        """Возвращает символ валюты по её коду"""
+        return self.currency_symbols.get(currency_code, currency_code)
 
-    def list_exchange_rates(self):
-        return self.exchange_rates
+    def get_available_currencies(self):
+        """Возвращает список доступных валют"""
+        return list(self.exchange_rates.keys())
 
-    def get_currency_symbols(self):
-        return self.currency_symbols
+    def format_currency(self, amount, currency):
+        """Форматирует сумму с символом валюты"""
+        symbol = self.get_currency_symbol(currency)
+        return f"{symbol}{amount:.2f}"

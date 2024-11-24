@@ -1,37 +1,32 @@
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QLabel, QComboBox
 from constants import BASES
 
 class NumberCalculator(QWidget):
     def __init__(self):
-        self.bases = BASES
-
         super().__init__()
-
-    def convert(self, number: str, from_base: str, to_base: str):
+        self.bases = BASES
+        
+    def convert_number(self, number: str, from_base: int, to_base: int) -> str:
+        """Конвертирует число из одной системы счисления в другую"""
         try:
-            if from_base not in self.bases or to_base not in self.bases:
-                raise ValueError("Неверно указана система счисления")
+            # Сначала преобразуем в десятичное число
+            decimal = int(number, from_base)
+            # Затем конвертируем в целевую систему счисления
+            if to_base == 2:
+                return bin(decimal)[2:]  # Убираем префикс '0b'
+            elif to_base == 8:
+                return oct(decimal)[2:]  # Убираем префикс '0o'
+            elif to_base == 16:
+                return hex(decimal)[2:].upper()  # Убираем префикс '0x'
+            else:
+                return str(decimal)
+        except ValueError:
+            return "Ошибка конвертации"
             
-            decimal_value = int(number, self.bases[from_base])
-
-            if to_base == 'BIN':
-                return bin(decimal_value)[2:]
-            elif to_base == 'OCT':
-                return oct(decimal_value)[2:]
-            elif to_base == 'DEC':
-                return str(decimal_value)
-            elif to_base == 'HEX':
-                return hex(decimal_value)[2:].upper()
-        except ValueError as ve:
-            return f"Ошибка: {ve}"
-        except Exception as e:
-            return f"Ошибка: {e}"
-
-    def is_valid_number(self, number: str, base: str):
+    def validate_number(self, number: str, base: int) -> bool:
+        """Проверяет, является ли строка допустимым числом в заданной системе счисления"""
         try:
-            if base not in self.bases:
-                raise ValueError("Неверно указана система счисления")
-            int(number, self.bases[base])
+            int(number, base)
             return True
         except ValueError:
             return False
