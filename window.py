@@ -1,8 +1,8 @@
-from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QGridLayout, QLabel, QSpinBox, QMessageBox
+from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QGridLayout, QLabel, QSpinBox, QMessageBox, QGroupBox, QTextEdit
 from PySide6.QtCore import Qt
 from sympy import sympify
 import sympy as sp
-from constants import SIMPLE_OPERATORS, SIMPLE_FUNCTIONS, ENGINEERING_OPERATORS, ENGINEERING_FUNCTIONS, MATRIX_OPERATIONS, FINANCIAL_FUNCTIONS, ACCOUNTING_FUNCTIONS, GRAPHING_FUNCTIONS, CURRENCY_SYMBOLS, PROGRAMMABLE_FUNCTIONS
+from constants import SIMPLE_OPERATORS, SIMPLE_FUNCTIONS, ENGINEERING_OPERATORS, ENGINEERING_FUNCTIONS, FINANCIAL_FUNCTIONS, ACCOUNTING_FUNCTIONS, GRAPHING_FUNCTIONS, CURRENCY_SYMBOLS, PROGRAMMABLE_FUNCTIONS
 import modules
 
 class MainWindow(QMainWindow):
@@ -252,7 +252,137 @@ class MainWindow(QMainWindow):
         return self.create_calculator_tab([], ACCOUNTING_FUNCTIONS)
 
     def create_programmable_calculator_tab(self):
-        return self.create_calculator_tab([], PROGRAMMABLE_FUNCTIONS, include_extra_buttons=True)
+        tab = QWidget()
+        layout = QVBoxLayout()
+        
+        # Создаём виджеты для определения функций
+        function_group = QGroupBox("Определение функции")
+        function_layout = QGridLayout()
+        
+        self.func_name_input = QLineEdit()
+        self.func_name_input.setPlaceholderText("Имя функции")
+        self.func_params_input = QLineEdit()
+        self.func_params_input.setPlaceholderText("Параметры (через пробел)")
+        self.func_expression_input = QLineEdit()
+        self.func_expression_input.setPlaceholderText("Выражение")
+        
+        define_button = QPushButton("Определить функцию")
+        define_button.clicked.connect(self.define_new_function)
+        
+        function_layout.addWidget(QLabel("Имя:"), 0, 0)
+        function_layout.addWidget(self.func_name_input, 0, 1)
+        function_layout.addWidget(QLabel("Параметры:"), 1, 0)
+        function_layout.addWidget(self.func_params_input, 1, 1)
+        function_layout.addWidget(QLabel("Выражение:"), 2, 0)
+        function_layout.addWidget(self.func_expression_input, 2, 1)
+        function_layout.addWidget(define_button, 3, 0, 1, 2)
+        
+        function_group.setLayout(function_layout)
+        
+        # Создаём виджеты для вызова функций
+        call_group = QGroupBox("Вызов функции")
+        call_layout = QGridLayout()
+        
+        self.call_name_input = QLineEdit()
+        self.call_name_input.setPlaceholderText("Имя функции")
+        self.call_args_input = QLineEdit()
+        self.call_args_input.setPlaceholderText("Аргументы (через пробел)")
+        
+        call_button = QPushButton("Вызвать функцию")
+        call_button.clicked.connect(self.call_existing_function)
+        
+        self.call_result = QLineEdit()
+        self.call_result.setReadOnly(True)
+        
+        call_layout.addWidget(QLabel("Функция:"), 0, 0)
+        call_layout.addWidget(self.call_name_input, 0, 1)
+        call_layout.addWidget(QLabel("Аргументы:"), 1, 0)
+        call_layout.addWidget(self.call_args_input, 1, 1)
+        call_layout.addWidget(call_button, 2, 0)
+        call_layout.addWidget(self.call_result, 2, 1)
+        
+        call_group.setLayout(call_layout)
+        
+        # Создаём виджеты для работы с переменными
+        var_group = QGroupBox("Переменные")
+        var_layout = QGridLayout()
+        
+        self.var_name_input = QLineEdit()
+        self.var_name_input.setPlaceholderText("Имя переменной")
+        self.var_value_input = QLineEdit()
+        self.var_value_input.setPlaceholderText("Значение")
+        
+        set_var_button = QPushButton("Установить")
+        set_var_button.clicked.connect(self.set_variable)
+        
+        var_layout.addWidget(QLabel("Переменная:"), 0, 0)
+        var_layout.addWidget(self.var_name_input, 0, 1)
+        var_layout.addWidget(QLabel("Значение:"), 1, 0)
+        var_layout.addWidget(self.var_value_input, 1, 1)
+        var_layout.addWidget(set_var_button, 2, 0, 1, 2)
+        
+        var_group.setLayout(var_layout)
+        
+        # Добавляем список функций и переменных
+        self.functions_list = QTextEdit()
+        self.functions_list.setReadOnly(True)
+        update_lists_button = QPushButton("Обновить списки")
+        update_lists_button.clicked.connect(self.update_function_lists)
+        
+        # Собираем всё вместе
+        layout.addWidget(function_group)
+        layout.addWidget(call_group)
+        layout.addWidget(var_group)
+        layout.addWidget(update_lists_button)
+        layout.addWidget(self.functions_list)
+        
+        tab.setLayout(layout)
+        return tab
+
+    def define_new_function(self):
+        name = self.func_name_input.text().strip()
+        params = self.func_params_input.text().strip().split()
+        expression = self.func_expression_input.text().strip()
+        
+        success, message = self.programmable_calculator.define_function(name, params, expression)
+        if success:
+            self.update_function_lists()
+            QMessageBox.information(self, "Успех", message)
+        else:
+            QMessageBox.warning(self, "Ошибка", message)
+
+    def call_existing_function(self):
+        name = self.call_name_input.text().strip()
+        args = [float(arg) for arg in self.call_args_input.text().strip().split()]
+        
+        success, result = self.programmable_calculator.call_function(name, args)
+        if success:
+            self.call_result.setText(str(result))
+        else:
+            self.call_result.setText(str(result))
+            QMessageBox.warning(self, "Ошибка", str(result))
+
+    def set_variable(self):
+        name = self.var_name_input.text().strip()
+        value = self.var_value_input.text().strip()
+        
+        success, message = self.programmable_calculator.set_variable(name, value)
+        if success:
+            self.update_function_lists()
+            QMessageBox.information(self, "Успех", message)
+        else:
+            QMessageBox.warning(self, "Ошибка", message)
+
+    def update_function_lists(self):
+        functions = self.programmable_calculator.list_functions()
+        variables = self.programmable_calculator.list_variables()
+        
+        text = "Определённые функции:\n"
+        text += "\n".join(functions)
+        text += "\n\nПеременные:\n"
+        text += "\n".join(variables)
+        
+        self.functions_list.setText(text)
 
     def create_currency_calculator_tab(self):
         return self.create_calculator_tab([], CURRENCY_SYMBOLS)
