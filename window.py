@@ -4,6 +4,7 @@ from sympy import sympify
 import sympy as sp
 from constants import SIMPLE_OPERATORS, SIMPLE_FUNCTIONS, ENGINEERING_OPERATORS, ENGINEERING_FUNCTIONS, FINANCIAL_FUNCTIONS, ACCOUNTING_FUNCTIONS, GRAPHING_FUNCTIONS, CURRENCY_SYMBOLS, PROGRAMMABLE_FUNCTIONS, BASES
 import modules
+import methods
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -48,6 +49,8 @@ class MainWindow(QMainWindow):
         # По умолчанию, открываем первый калькулятор
         self.tab_widget.setCurrentIndex(0)
 
+
+class Create_tab:
     def create_calculator_tab(self, operators, functions, include_extra_buttons=False):
         tab = QWidget()
         layout = QVBoxLayout()
@@ -261,48 +264,7 @@ class MainWindow(QMainWindow):
         tab.setLayout(layout)
         return tab
 
-    # Добавьте следующие методы в класс MainWindow
-
-    def calculate_pv(self):
-        try:
-            fv = float(self.pv_fv_input.text())
-            rate = float(self.pv_rate_input.text()) / 100
-            periods = float(self.pv_periods_input.text())
-            
-            result = self.financial_calculator.calculate_pv(fv, rate, periods)
-            self.pv_result.setText(f"{result:.2f}")
-        except Exception as e:
-            self.pv_result.setText(f"Ошибка: {str(e)}")
-
-    def calculate_fv(self):
-        try:
-            pv = float(self.fv_pv_input.text())
-            rate = float(self.fv_rate_input.text()) / 100
-            periods = float(self.fv_periods_input.text())
-            
-            result = self.financial_calculator.calculate_fv(pv, rate, periods)
-            self.fv_result.setText(f"{result:.2f}")
-        except Exception as e:
-            self.fv_result.setText(f"Ошибка: {str(e)}")
-
-    def calculate_npv(self):
-        try:
-            investment = float(self.npv_investment_input.text())
-            flows = [float(x.strip()) for x in self.npv_flows_input.text().split(',')]
-            rate = float(self.npv_rate_input.text()) / 100
-            
-            result = self.financial_calculator.calculate_npv(investment, flows, rate)
-            self.npv_result.setText(f"{result:.2f}")
-        except Exception as e:
-            self.npv_result.setText(f"Ошибка: {str(e)}")
-
-    def calculate_irr(self):
-        try:
-            flows = [float(x.strip()) for x in self.irr_flows_input.text().split(',')]
-            result = self.financial_calculator.calculate_irr(flows)
-            self.irr_result.setText(f"{result * 100:.2f}%")
-        except Exception as e:
-            self.irr_result.setText(f"Ошибка: {str(e)}")
+    #class Finans_methods:
 
     def create_graph_calculator_tab(self):
         tab = QWidget()
@@ -365,27 +327,7 @@ class MainWindow(QMainWindow):
         tab.setLayout(layout)
         return tab
 
-    def plot_graph(self):
-        expression = self.function_input.text()
-        result = self.graph_calculator.plot_function(
-            expression,
-            x_range=(self.x_min.value(), self.x_max.value()),
-            step=0.1
-        )
-        if result is not True:
-            QMessageBox.warning(self, "Ошибка", str(result))
-
-    def clear_graph(self):
-        self.graph_calculator.clear_plot()
-        self.function_input.clear()
-
-    def apply_graph_range(self):
-        self.graph_calculator.set_plot_range(
-            self.x_min.value(),
-            self.x_max.value(),
-            self.y_min.value(),
-            self.y_max.value()
-        )
+    #class Graph_methods:
 
     def create_number_calculator_tab(self):
         tab = QWidget()
@@ -453,26 +395,7 @@ class MainWindow(QMainWindow):
         tab.setLayout(layout)
         return tab
 
-    def convert_number(self):
-        number = self.number_input.text()
-        from_base = self.from_base_combo.currentData()
-        to_base = self.to_base_combo.currentData()
-        
-        # Проверяем валидность введенного числа
-        if not self.number_calculator.validate_number(number, from_base):
-            self.result_display.setText("Ошибка: Неверный формат числа")
-            return
-            
-        result = self.number_calculator.convert_number(number, from_base, to_base)
-        self.result_display.setText(result)
-
-    def on_number_button_click(self, text):
-        current_text = self.number_input.text()
-        self.number_input.setText(current_text + text)
-
-    def clear_number_input(self):
-        self.number_input.clear()
-        self.result_display.clear()
+    #class Number_func:
 
     def create_accounting_calculator_tab(self):
         tab = QWidget()
@@ -563,71 +486,7 @@ class MainWindow(QMainWindow):
         
         return tab
 
-    def calculate_depreciation(self):
-        try:
-            initial_cost = float(self.initial_cost.text())
-            salvage_value = float(self.salvage_value.text())
-            useful_life = self.useful_life.value()
-            method = 'straight' if self.depreciation_method.currentText() == 'Линейный метод' else 'declining'
-            
-            result = self.accounting_calculator.calculate_depreciation(
-                initial_cost, salvage_value, useful_life, method
-            )
-            
-            if isinstance(result, dict):
-                text = "Расчет амортизации:\n\n"
-                for year, values in result.items():
-                    text += f"Год {year}:\n"
-                    text += f"Амортизация: {values['depreciation']:,.2f}\n"
-                    text += f"Остаточная стоимость: {values['book_value']:,.2f}\n\n"
-                self.depreciation_result.setText(text)
-            else:
-                self.depreciation_result.setText(str(result))
-                
-        except ValueError:
-            self.depreciation_result.setText("Ошибка: Проверьте правильность введенных данных")
-
-    def calculate_loan(self):
-        try:
-            amount = float(self.loan_amount.text())
-            rate = self.loan_rate.value()
-            years = self.loan_years.value()
-            
-            result = self.accounting_calculator.calculate_loan_amortization(amount, rate, years)
-            
-            if isinstance(result, dict):
-                text = "График платежей:\n\n"
-                for period, values in result.items():
-                    text += f"Платеж {period}:\n"
-                    text += f"Сумма платежа: {values['payment']:,.2f}\n"
-                    text += f"Основной долг: {values['principal']:,.2f}\n"
-                    text += f"Проценты: {values['interest']:,.2f}\n"
-                    text += f"Остаток долга: {values['balance']:,.2f}\n\n"
-                self.loan_result.setText(text)
-            else:
-                self.loan_result.setText(str(result))
-                
-        except ValueError:
-            self.loan_result.setText("Ошибка: Проверьте правильность введенных данных")
-
-    def calculate_vat(self):
-        try:
-            amount = float(self.vat_amount.text())
-            rate = self.vat_rate.value()
-            
-            result = self.accounting_calculator.calculate_vat(amount, rate)
-            
-            if isinstance(result, dict):
-                text = "Расчет НДС:\n\n"
-                text += f"Сумма без НДС: {result['amount']:,.2f}\n"
-                text += f"НДС: {result['vat']:,.2f}\n"
-                text += f"Итого с НДС: {result['total']:,.2f}"
-                self.vat_result.setText(text)
-            else:
-                self.vat_result.setText(str(result))
-                
-        except ValueError:
-            self.vat_result.setText("Ошибка: Проверьте правильность введенных данных")
+    #class Accounting_func:
 
     def create_programmable_calculator_tab(self):
         tab = QWidget()
@@ -717,50 +576,7 @@ class MainWindow(QMainWindow):
         tab.setLayout(layout)
         return tab
 
-    def define_new_function(self):
-        name = self.func_name_input.text().strip()
-        params = self.func_params_input.text().strip().split()
-        expression = self.func_expression_input.text().strip()
-        
-        success, message = self.programmable_calculator.define_function(name, params, expression)
-        if success:
-            self.update_function_lists()
-            QMessageBox.information(self, "Успех", message)
-        else:
-            QMessageBox.warning(self, "Ошибка", message)
-
-    def call_existing_function(self):
-        name = self.call_name_input.text().strip()
-        args = [float(arg) for arg in self.call_args_input.text().strip().split()]
-        
-        success, result = self.programmable_calculator.call_function(name, args)
-        if success:
-            self.call_result.setText(str(result))
-        else:
-            self.call_result.setText(str(result))
-            QMessageBox.warning(self, "Ошибка", str(result))
-
-    def set_variable(self):
-        name = self.var_name_input.text().strip()
-        value = self.var_value_input.text().strip()
-        
-        success, message = self.programmable_calculator.set_variable(name, value)
-        if success:
-            self.update_function_lists()
-            QMessageBox.information(self, "Успех", message)
-        else:
-            QMessageBox.warning(self, "Ошибка", message)
-
-    def update_function_lists(self):
-        functions = self.programmable_calculator.list_functions()
-        variables = self.programmable_calculator.list_variables()
-        
-        text = "Определённые функции:\n"
-        text += "\n".join(functions)
-        text += "\n\nПеременные:\n"
-        text += "\n".join(variables)
-        
-        self.functions_list.setText(text)
+    #class Programmable_func:
 
     def create_currency_calculator_tab(self):
         tab = QWidget()
@@ -816,37 +632,8 @@ class MainWindow(QMainWindow):
         tab.setLayout(layout)
         return tab
 
-    def perform_currency_conversion(self):
-        try:
-            amount = float(self.amount_input.text())
-            from_curr = self.from_currency.currentText()
-            to_curr = self.to_currency.currentText()
-            
-            result = self.currency_calculator.convert_currency(amount, from_curr, to_curr)
-            
-            if isinstance(result, float):
-                formatted_result = self.currency_calculator.format_currency(result, to_curr)
-                self.result_display.setText(formatted_result)
-            else:
-                self.result_display.setText(str(result))
-                
-        except ValueError:
-            self.result_display.setText("Ошибка: Введите корректное число")
-        except Exception as e:
-            self.result_display.setText(f"Ошибка: {str(e)}")
 
-    def update_currency_rates(self):
-        result = self.currency_calculator.update_exchange_rates()
-        if result:
-            QMessageBox.warning(self, "Ошибка", result)
-        else:
-            QMessageBox.information(self, "Успех", "Курсы валют успешно обновлены")
-
-    def make_button_callback(self, text, input_line):
-        def callback():
-            self.on_button_click(text, input_line)
-        return callback
-
+class Button:
     def on_button_click(self, text, input_line):
         if text == 'C':
             input_line.clear()
@@ -854,32 +641,13 @@ class MainWindow(QMainWindow):
             current_text = input_line.text()
             input_line.setText(current_text[:-1])
         elif text == '%':
-            try:
-                result = str(float(input_line.text()) / 100)
-                input_line.setText(result)
-            except ValueError:
-                input_line.setText("Ошибка")
+            pass
+            #def percent(self, input_line):
         elif text in ['sin', 'cos', 'tan', 'log', 'sqrt', '∫', 'd/dx']:
             input_line.setText(input_line.text() + text)
         elif text == '=':
-            expression = input_line.text()
-            try:
-                if expression.startswith('∫(') or expression.startswith('d/dx('):
-                    result = self.engineering_calculator.evaluate(expression)
-                    # Преобразуем символьный результат в строку
-                    input_line.setText(str(result))
-                else:
-                    result = sp.sympify(expression).evalf()
-                    # Проверяем, является ли результат числом
-                    if isinstance(result, (float, int)):
-                        if float(result).is_integer():
-                            input_line.setText(str(int(result)))
-                        else:
-                            input_line.setText(f"{float(result):.10f}".rstrip('0').rstrip('.'))
-                    else:
-                        input_line.setText(str(result))
-            except Exception as e:
-                input_line.setText(f"Ошибка: {e}")
+            pass
+            #def sumbols_but(self, input_line):
         else:
             input_line.setText(input_line.text() + text)
 
@@ -907,6 +675,8 @@ class MainWindow(QMainWindow):
             input_line = current_tab.findChild(QLineEdit)
             self.on_button_click(key_map[key], input_line)
 
+
+class Matrix_interface:
     def set_matrix_size(self):
         rows = self.rows_spinbox.value()
         cols = self.cols_spinbox.value()
@@ -940,39 +710,8 @@ class MainWindow(QMainWindow):
                     row.append(0)
             matrix.append(row)
         return matrix
-
-    def perform_add(self):
-        matrix1 = self.get_matrix(self.matrix_layouts[0])
-        matrix2 = self.get_matrix(self.matrix_layouts[1])
-        result = self.matrix_calculator.add(matrix1, matrix2)
-        self.display_result(result)
-
-    def perform_subtract(self):
-        matrix1 = self.get_matrix(self.matrix_layouts[0])
-        matrix2 = self.get_matrix(self.matrix_layouts[1])
-        result = self.matrix_calculator.subtract(matrix1, matrix2)
-        self.display_result(result)
-
-    def perform_multiply(self):
-        matrix1 = self.get_matrix(self.matrix_layouts[0])
-        matrix2 = self.get_matrix(self.matrix_layouts[1])
-        result = self.matrix_calculator.multiply(matrix1, matrix2)
-        self.display_result(result)
-
-    def perform_transpose(self):
-        matrix1 = self.get_matrix(self.matrix_layouts[0])
-        result = self.matrix_calculator.transpose(matrix1)
-        self.display_result(result)
-
-    def perform_determinant(self):
-        matrix1 = self.get_matrix(self.matrix_layouts[0])
-        result = self.matrix_calculator.determinant(matrix1)
-        self.display_result(result)
-
-    def perform_inverse(self):
-        matrix1 = self.get_matrix(self.matrix_layouts[0])
-        result = self.matrix_calculator.inverse(matrix1)
-        self.display_result(result)
+    
+    #class Matrix_perform:
 
     def display_result(self, result):
         if isinstance(result, list):
