@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QMessageBox
 
-class Currency_methods:
+class Currency:
     def perform_currency_conversion(self):
         try:
             amount = float(self.amount_input.text())

@@ -1,6 +1,6 @@
 import sympy as sp
 
-class Button_methods:
+class Button:
     def percent(self, input_line):
         try:
             result = str(float(input_line.text()) / 100)
