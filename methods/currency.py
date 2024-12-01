@@ -1,6 +1,12 @@
 from PySide6.QtWidgets import QMessageBox
+from modules import CurrencyCalculator
 
 class Currency:
+    def __init__(self):
+        from window import Button
+        self.button = Button
+        self.currency_calculator = CurrencyCalculator
+        
     def perform_currency_conversion(self):
         try:
             amount = float(self.amount_input.text())
@@ -27,7 +33,7 @@ class Currency:
         else:
             QMessageBox.information(self, "Успех", "Курсы валют успешно обновлены")
 
-    def make_button_callback(self, text, input_line):
-        def callback():
+    def make_button_callback(self, text):
+        def callback(input_line):
             self.on_button_click(text, input_line)
         return callback

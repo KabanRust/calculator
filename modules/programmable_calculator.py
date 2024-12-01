@@ -10,12 +10,6 @@ class ProgrammableCalculator(QWidget):
         self.variables = {}  # Добавляем хранение переменных
         
     def define_function(self, name, params, expression):
-        """
-        Определяет новую функцию
-        :param name: Имя функции
-        :param params: Список параметров
-        :param expression: Строка с выражением
-        """
         try:
             param_symbols = symbols(params)
             parsed_expression = sympify(expression)
@@ -28,11 +22,6 @@ class ProgrammableCalculator(QWidget):
             return False, f"Ошибка при определении функции: {str(e)}"
 
     def call_function(self, name, args):
-        """
-        Вызывает определённую функцию
-        :param name: Имя функции
-        :param args: Список аргументов
-        """
         if name not in self.functions:
             return False, f"Функция '{name}' не найдена"
             
@@ -49,9 +38,6 @@ class ProgrammableCalculator(QWidget):
             return False, f"Ошибка при вызове функции: {str(e)}"
 
     def set_variable(self, name, value):
-        """
-        Устанавливает значение переменной
-        """
         try:
             self.variables[name] = float(value)
             return True, f"Переменная {name} = {value}"
@@ -59,15 +45,9 @@ class ProgrammableCalculator(QWidget):
             return False, "Неверное значение переменной"
 
     def get_variable(self, name):
-        """
-        Получает значение переменной
-        """
         return self.variables.get(name)
 
     def list_functions(self):
-        """
-        Возвращает список определённых функций
-        """
         result = []
         for name, func in self.functions.items():
             params = ', '.join(str(p) for p in func['params'])
@@ -75,7 +55,4 @@ class ProgrammableCalculator(QWidget):
         return result
 
     def list_variables(self):
-        """
-        Возвращает список определённых переменных
-        """
         return [f"{name} = {value}" for name, value in self.variables.items()]

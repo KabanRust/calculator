@@ -8,36 +8,18 @@ class FinancialCalculator(QWidget):
         self.functions = FINANCIAL_FUNCTIONS
     
     def calculate_pv(self, fv, rate, periods):
-        """
-        Расчет текущей стоимости (Present Value)
-        fv: будущая стоимость
-        rate: процентная ставка (в долях)
-        periods: количество периодов
-        """
         try:
             return fv / ((1 + rate) ** periods)
         except Exception as e:
             return f"Ошибка в расчете PV: {e}"
 
     def calculate_fv(self, pv, rate, periods):
-        """
-        Расчет будущей стоимости (Future Value)
-        pv: текущая стоимость
-        rate: процентная ставка (в долях)
-        periods: количество периодов
-        """
         try:
             return pv * ((1 + rate) ** periods)
         except Exception as e:
             return f"Ошибка в расчете FV: {e}"
 
     def calculate_npv(self, initial_investment, cash_flows, rate):
-        """
-        Расчет чистой приведенной стоимости (Net Present Value)
-        initial_investment: начальные инвестиции (отрицательное число)
-        cash_flows: список денежных потоков
-        rate: процентная ставка (в долях)
-        """
         try:
             npv = initial_investment
             for t, cf in enumerate(cash_flows, 1):
@@ -47,13 +29,6 @@ class FinancialCalculator(QWidget):
             return f"Ошибка в расчете NPV: {e}"
 
     def calculate_irr(self, cash_flows, guess=0.1, tolerance=0.0001, max_iterations=100):
-        """
-        Расчет внутренней нормы доходности (Internal Rate of Return)
-        cash_flows: список денежных потоков (первый - начальные инвестиции)
-        guess: начальное предположение для ставки
-        tolerance: допустимая погрешность
-        max_iterations: максимальное число итераций
-        """
         try:
             rate = guess
             for i in range(max_iterations):
