@@ -40,6 +40,10 @@ class CurrencyCalculator(QWidget):
             return f"Ошибка конвертации: {str(e)}"
     
     def update_exchange_rates(self):
+        """
+        Метод для обновления курсов валют.
+        В реальном приложении здесь был бы API запрос к сервису курсов валют.
+        """
         try:
             # Здесь можно добавить реальный API запрос
             # Например, используя API exchangerate-api.com или подобный сервис

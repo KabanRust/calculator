@@ -6,6 +6,8 @@ import numpy as np
 from constants import GRAPHING_FUNCTIONS, MATH_CONSTANTS, ENGINEERING_FUNCTIONS
 
 class MathParser:
+    """Helper class to safely parse and evaluate mathematical expressions"""
+    
     def __init__(self):
         # Dictionary of safe mathematical functions
         self.safe_functions = {
@@ -32,9 +34,11 @@ class MathParser:
         self.safe_functions.update(MATH_CONSTANTS)
         
     def validate_function(self, function_name):
+        """Проверяет, является ли функция разрешенной"""
         return function_name in GRAPHING_FUNCTIONS, ENGINEERING_FUNCTIONS
         
     def evaluate(self, expression, x):
+        # Create a safe namespace with mathematical functions and the x variable
         namespace = {
             'x': x,
             **self.safe_functions
@@ -51,6 +55,7 @@ class GraphCalculator(QWidget):
         self.math_parser = MathParser()
         
     def preprocess_expression(self, expression):
+        """Подготовка выражения к вычислению"""
         # Заменяем степень
         expression = expression.replace('^', '**')
         
