@@ -45,7 +45,7 @@ class ProgressWindow(QWidget):
         """)
 
         # Выбираем случайное изображение
-        image_paths = ["D:/project/calculator/pictures/kaban.png", "D:/project/calculator/pictures/koshka.png"]
+        image_paths = ["pictures/kaban.png", "pictures/koshka.png"]
         selected_image = random.choice(image_paths)
         
         # Изображение
