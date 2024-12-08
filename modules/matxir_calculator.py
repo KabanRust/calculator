@@ -32,7 +32,7 @@ class MatrixCalculator:
     def determinant(self, matrix):
         try:
             result = np.linalg.det(matrix)
-            return [[round(result, 2)]]  # Возвращаем детерминант в виде матрицы 1x1
+            return [[round(result, 2)]]
         except Exception as e:
             return f"Ошибка: {e}"
 

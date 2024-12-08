@@ -1,7 +1,14 @@
 from PySide6.QtWidgets import QWidget
 import sympy as sp
 import math
-from constants import ENGINEERING_OPERATORS, ENGINEERING_FUNCTIONS, PI, E
+import json
+with open("constants.json", "r") as file:
+    constants = json.load(file)
+
+ENGINEERING_OPERATORS = constants["ENGINEERING_OPERATORS"]
+ENGINEERING_FUNCTIONS = constants["ENGINEERING_FUNCTIONS"]
+PI = constants["PI"]
+E = constants["E"]
 from modules.simple_calculator import SimpleCalculator
 
 class EngineeringCalculator(SimpleCalculator, QWidget):
@@ -68,10 +75,8 @@ class EngineeringCalculator(SimpleCalculator, QWidget):
 
     def evaluate(self, expression):
         try:
-            # Заменяем ^ на ** для совместимости
             expression = expression.replace('^', '**')
             
-            # Обработка интегралов и производных
             while '∫(' in expression or 'd/dx(' in expression:
                 if '∫(' in expression:
                     start = expression.index('∫(')
@@ -87,7 +92,6 @@ class EngineeringCalculator(SimpleCalculator, QWidget):
                     diff_result = self.differentiate(diff_expr)
                     expression = expression[:start] + str(diff_result) + expression[end+1:]
             
-            # Общая обработка выражений
             result = sp.sympify(expression).evalf()
             return result
         
@@ -97,7 +101,6 @@ class EngineeringCalculator(SimpleCalculator, QWidget):
             return f"Ошибка: {e}"
 
     def find_matching_parenthesis(self, s, start):
-        """Находит закрывающую скобку, соответствующую открывающей."""
         count = 1
         for i in range(start + 1, len(s)):
             if s[i] == '(':

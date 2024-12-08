@@ -1,6 +1,11 @@
 from PySide6.QtWidgets import QWidget
 from sympy import sympify
-from constants import SIMPLE_OPERATORS, SIMPLE_FUNCTIONS
+import json
+with open("constants.json", "r") as file:
+    constants = json.load(file)
+
+SIMPLE_OPERATORS = constants["SIMPLE_OPERATORS"]
+SIMPLE_FUNCTIONS = constants["SIMPLE_FUNCTIONS"]
 
 class SimpleCalculator(QWidget):
     def __init__(self):

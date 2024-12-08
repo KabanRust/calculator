@@ -1,27 +1,29 @@
 import random
+import json
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QProgressBar
 from PySide6.QtGui import QPixmap, QGuiApplication, QPainter, QColor
 from window import MainWindow  # Импорт главного окна
+
 
 class ProgressWindow(QWidget):
     def __init__(self):
         super().__init__()
 
         self.setWindowTitle("Загрузка...")
-        
+
         # Получаем размер экрана
         screen = QGuiApplication.primaryScreen().geometry()
         screen_width = screen.width()
         screen_height = screen.height()
-        
+
         # Динамический размер окна в зависимости от размера экрана
         window_width = int(screen_width * 0.5)
         window_height = int(screen_height * 0.7)
-        
+
         # Устанавливаем фиксированный размер
         self.setFixedSize(window_width, window_height)
-        
+
         # Отключаем возможность изменения размера
         self.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
@@ -29,11 +31,16 @@ class ProgressWindow(QWidget):
 
         # Надпись с фактом
         try:
-            import facts
-            fact = facts.get_fact()  # Предполагаем, что в sov.py есть функция get_fact()
-        except Exception:
-            fact = "Не удалось загрузить факт"
-        
+            with open("facts.json", "r", encoding="utf-8") as file:
+                data = json.load(file)
+                facts = data.get("facts", [])
+                if facts:
+                    fact = random.choice(facts)
+                else:
+                    fact = "Факты отсутствуют в файле facts.json."
+        except Exception as e:
+            fact = f"Ошибка при загрузке фактов: {e}"
+
         self.fact_label = QLabel(fact, self)
         self.fact_label.setAlignment(Qt.AlignCenter)
         self.fact_label.setWordWrap(True)  # Включаем перенос слов
@@ -47,20 +54,20 @@ class ProgressWindow(QWidget):
         # Выбираем случайное изображение
         image_paths = ["pictures/kaban.png", "pictures/koshka.png"]
         selected_image = random.choice(image_paths)
-        
+
         # Изображение
         self.image_label = QLabel(self)
         original_pixmap = QPixmap(selected_image)
-        
+
         # Масштабирование изображения до 80% ширины окна
         scaled_width = int(window_width * 0.8)
         scaled_height = int(original_pixmap.height() * (scaled_width / original_pixmap.width()))
         self.scaled_pixmap = original_pixmap.scaled(scaled_width, scaled_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        
+
         # Создаем пустой пиксель для анимации
         self.reveal_pixmap = QPixmap(self.scaled_pixmap.size())
         self.reveal_pixmap.fill(QColor(0, 0, 0, 0))  # Прозрачный фон
-        
+
         self.image_label.setPixmap(self.reveal_pixmap)
         self.image_label.setAlignment(Qt.AlignCenter)
 
@@ -101,33 +108,30 @@ class ProgressWindow(QWidget):
         self.progress_value = 0
 
     def update_progress(self):
-        """Обновляет прогресс-бар и постепенно открывает картинку."""
         if self.progress_value < 100:
             self.progress_value += 2
             self.progress_bar.setValue(self.progress_value)
-            
+
             # Постепенное открытие изображения
             self.reveal_image()
 
     def reveal_image(self):
-        """Открывает изображение пропорционально прогрессу."""
         # Создаем новый пиксель-буфер
         reveal_height = int(self.scaled_pixmap.height() * (self.progress_value / 100))
-        
+
         # Создаем новый пиксель с прозрачным фоном
         self.reveal_pixmap = QPixmap(self.scaled_pixmap.size())
         self.reveal_pixmap.fill(QColor(0, 0, 0, 0))  # Прозрачный фон
-        
+
         # Рисуем часть оригинального изображения
         painter = QPainter(self.reveal_pixmap)
         painter.drawPixmap(0, 0, self.scaled_pixmap, 0, 0, self.scaled_pixmap.width(), reveal_height)
         painter.end()
-        
+
         # Обновляем изображение
         self.image_label.setPixmap(self.reveal_pixmap)
 
     def close_progress(self):
-        """Закрывает окно прогресса и открывает главное окно."""
         self.timer.stop()
         self.close_timer.stop()
         self.close()
@@ -138,7 +142,6 @@ class ProgressWindow(QWidget):
 
 
 def main():
-    """Точка входа в приложение."""
     app = QApplication([])
 
     # Запуск окна прогресса

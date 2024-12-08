@@ -6,18 +6,6 @@ class AccountingCalculator(QWidget):
         super().__init__()
         
     def calculate_depreciation(self, initial_cost, salvage_value, useful_life, method='straight'):
-        """
-        Рассчитывает амортизацию актива.
-        
-        Args:
-            initial_cost (float): Начальная стоимость актива
-            salvage_value (float): Ликвидационная стоимость
-            useful_life (int): Срок полезного использования в годах
-            method (str): Метод расчета амортизации ('straight' или 'declining')
-            
-        Returns:
-            dict: Результаты расчета амортизации по годам
-        """
         try:
             initial_cost = Decimal(str(initial_cost))
             salvage_value = Decimal(str(salvage_value))
@@ -35,7 +23,7 @@ class AccountingCalculator(QWidget):
                     }
                     
             elif method == 'declining':
-                rate = 2 / useful_life  # Коэффициент ускоренной амортизации
+                rate = 2 / useful_life
                 results = {}
                 current_value = initial_cost
                 
@@ -55,24 +43,11 @@ class AccountingCalculator(QWidget):
             return f"Ошибка при расчете амортизации: {str(e)}"
 
     def calculate_loan_amortization(self, principal, annual_rate, years, payments_per_year=12):
-        """
-        Рассчитывает амортизацию кредита.
-        
-        Args:
-            principal (float): Сумма кредита
-            annual_rate (float): Годовая процентная ставка (в процентах)
-            years (int): Срок кредита в годах
-            payments_per_year (int): Количество платежей в год
-            
-        Returns:
-            dict: График платежей
-        """
         try:
             principal = Decimal(str(principal))
             rate_per_period = Decimal(str(annual_rate / 100 / payments_per_year))
             total_payments = years * payments_per_year
             
-            # Расчет ежемесячного платежа
             payment = principal * (rate_per_period * (1 + rate_per_period)**total_payments) / ((1 + rate_per_period)**total_payments - 1)
             payment = payment.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             
@@ -97,16 +72,6 @@ class AccountingCalculator(QWidget):
             return f"Ошибка при расчете амортизации кредита: {str(e)}"
 
     def calculate_vat(self, amount, rate=20):
-        """
-        Рассчитывает НДС
-        
-        Args:
-            amount (float): Сумма без НДС
-            rate (float): Ставка НДС в процентах
-            
-        Returns:
-            dict: Результаты расчета НДС
-        """
         try:
             amount = Decimal(str(amount))
             rate = Decimal(str(rate))
@@ -124,17 +89,6 @@ class AccountingCalculator(QWidget):
             return f"Ошибка при расчете НДС: {str(e)}"
 
     def calculate_salary(self, gross_salary, tax_rate=13, insurance_rate=2.9):
-        """
-        Рассчитывает зарплату с учетом налогов и отчислений
-        
-        Args:
-            gross_salary (float): Грязная зарплата
-            tax_rate (float): Ставка подоходного налога в процентах
-            insurance_rate (float): Ставка страховых взносов в процентах
-            
-        Returns:
-            dict: Результаты расчета зарплаты
-        """
         try:
             gross = Decimal(str(gross_salary))
             

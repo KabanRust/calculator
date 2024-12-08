@@ -3,38 +3,38 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
-from constants import GRAPHING_FUNCTIONS, MATH_CONSTANTS, ENGINEERING_FUNCTIONS
+import json
+with open("constants.json", "r") as file:
+    constants = json.load(file)
+ENGINEERING_OPERATORS = constants["ENGINEERING_OPERATORS"]
+ENGINEERING_FUNCTIONS = constants["ENGINEERING_FUNCTIONS"]
+PI = constants["PI"]
+E = constants["E"]
+GRAPHING_FUNCTIONS = constants["GRAPHING_FUNCTIONS"]
+MATH_CONSTANTS = constants["MATH_CONSTANTS"]
 
 class MathParser:
-    """Helper class to safely parse and evaluate mathematical expressions"""
-    
     def __init__(self):
-        # Dictionary of safe mathematical functions
         self.safe_functions = {
-            # Тригонометрические функции
+            'sqrt': np.sqrt,
             'sin': np.sin,
             'cos': np.cos,
             'tan': np.tan,
-            # Гиперболические функции
             'sinh': np.sinh,
             'cosh': np.cosh,
             'tanh': np.tanh,
-            # Дополнительные математические функции
             'exp': np.exp,
             'log': np.log,
             'log10': np.log10,
             'sqrt': np.sqrt,
             'abs': np.abs,
         }
-        # Добавляем математические константы
         self.safe_functions.update(MATH_CONSTANTS)
         
     def validate_function(self, function_name):
-        """Проверяет, является ли функция разрешенной"""
         return function_name in GRAPHING_FUNCTIONS, ENGINEERING_FUNCTIONS
         
     def evaluate(self, expression, x):
-        # Create a safe namespace with mathematical functions and the x variable
         namespace = {
             'x': x,
             **self.safe_functions
@@ -51,11 +51,8 @@ class GraphCalculator(QWidget):
         self.math_parser = MathParser()
         
     def preprocess_expression(self, expression):
-        """Подготовка выражения к вычислению"""
-        # Заменяем степень
         expression = expression.replace('^', '**')
         
-        # Проверяем все функции в выражении
         for func in GRAPHING_FUNCTIONS:
             if func in expression and not self.math_parser.validate_function(func):
                 raise ValueError(f"Неподдерживаемая функция: {func}")
@@ -67,10 +64,8 @@ class GraphCalculator(QWidget):
             self.ax.clear()
             x = np.arange(x_range[0], x_range[1], step)
             
-            # Предобработка выражения
             expression = self.preprocess_expression(expression)
             
-            # Безопасное вычисление
             y = self.math_parser.evaluate(expression, x)
             
             self.ax.plot(x, y, label=f"y = {expression}")
@@ -91,10 +86,8 @@ class GraphCalculator(QWidget):
             x = np.arange(x_range[0], x_range[1], step)
             
             for expr in expressions:
-                # Предобработка выражения
                 expr = self.preprocess_expression(expr)
                 
-                # Безопасное вычисление
                 y = self.math_parser.evaluate(expr, x)
                 self.ax.plot(x, y, label=f"y = {expr}")
             
@@ -121,3 +114,8 @@ class GraphCalculator(QWidget):
 
     def get_canvas(self):
         return self.canvas
+    
+    import numpy as np
+
+def test_sqrt(x):
+    return np.sqrt(x)

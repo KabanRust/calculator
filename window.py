@@ -2,7 +2,22 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget, QV
 from PySide6.QtCore import Qt
 from sympy import sympify
 import sympy as sp
-from constants import SIMPLE_OPERATORS, SIMPLE_FUNCTIONS, ENGINEERING_OPERATORS, ENGINEERING_FUNCTIONS
+import json
+with open("constants.json", "r") as file:
+    constants = json.load(file)
+
+SIMPLE_OPERATORS = constants["SIMPLE_OPERATORS"]
+SIMPLE_FUNCTIONS = constants["SIMPLE_FUNCTIONS"]
+ENGINEERING_OPERATORS = constants["ENGINEERING_OPERATORS"]
+ENGINEERING_FUNCTIONS = constants["ENGINEERING_FUNCTIONS"]
+PI = constants["PI"]
+E = constants["E"]
+FINANCIAL_FUNCTIONS = constants["FINANCIAL_FUNCTIONS"]
+ACCOUNTING_FUNCTIONS = constants["ACCOUNTING_FUNCTIONS"]
+GRAPHING_FUNCTIONS = constants["GRAPHING_FUNCTIONS"]
+MATH_CONSTANTS = constants["MATH_CONSTANTS"]
+CURRENCY_SYMBOLS = constants["CURRENCY_SYMBOLS"]
+PROGRAMMABLE_FUNCTIONS = constants["PROGRAMMABLE_FUNCTIONS"]
 import modules
 
 class MainWindow(QMainWindow):
