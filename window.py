@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt
 from sympy import sympify
 import sympy as sp
 import json
-with open("constants.json", "r") as file:
+with open("data/constants.json", "r") as file:
     constants = json.load(file)
 
 SIMPLE_OPERATORS = constants["SIMPLE_OPERATORS"]

@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget
 from sympy import sympify
 import json
-with open("constants.json", "r") as file:
+with open("data/constants.json", "r") as file:
     constants = json.load(file)
 
 SIMPLE_OPERATORS = constants["SIMPLE_OPERATORS"]
