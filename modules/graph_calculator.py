@@ -4,7 +4,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
 import json
-with open("data/constants.json", "r") as file:
+with open("constants.json", "r") as file:
     constants = json.load(file)
 ENGINEERING_OPERATORS = constants["ENGINEERING_OPERATORS"]
 ENGINEERING_FUNCTIONS = constants["ENGINEERING_FUNCTIONS"]

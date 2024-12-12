@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget
 import json
-with open("data/constants.json", "r") as file:
+with open("constants.json", "r") as file:
     constants = json.load(file)
 
 FINANCIAL_FUNCTIONS = constants["FINANCIAL_FUNCTIONS"]

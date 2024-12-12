@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QWidget
 import sympy as sp
 import math
 import json
-with open("data/constants.json", "r") as file:
+with open("constants.json", "r") as file:
     constants = json.load(file)
 
 ENGINEERING_OPERATORS = constants["ENGINEERING_OPERATORS"]

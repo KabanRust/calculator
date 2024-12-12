@@ -31,7 +31,7 @@ class ProgressWindow(QWidget):
 
         # Надпись с фактом
         try:
-            with open("data/facts.json", "r", encoding="utf-8") as file:
+            with open("facts.json", "r", encoding="utf-8") as file:
                 data = json.load(file)
                 facts = data.get("facts", [])
                 if facts:
